@@ -22,9 +22,11 @@ endif
 ################################################################################
 
 NAME				= cub3D
-CCF_INCL_MANDATORY	= -I ./$(SRC_DIR)/includes
+CCF_INCL_MANDATORY	= -I ./$(SRC_DIR)/includes -I $(LIBFT_DIR) -I $(MINILIBX_DIR)
 
-C_FILES_MANDATORY	= main.c
+C_FILES_WINDOW		= $(addprefix window/,window.c w__render.c)
+
+C_FILES_MANDATORY	= main.c $(C_FILES_WINDOW)
 FILES_MANDATORY		= $(C_FILES_MANDATORY)
 SRCS_MANDATORY		= $(addprefix $(SRC_DIR)/,$(FILES_MANDATORY))
 OBJS_MANDATORY		= $(addprefix $(OBJS_DIR)/,$(FILES_MANDATORY:.c=.o))
