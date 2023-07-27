@@ -1,13 +1,15 @@
 OBJS_DIR			= objects
 SRC_DIR				= src
 BONUS_DIR			= bonus
-LIBFT_DIR			= libft
+LIBFT_DIR			= libs/libft
+MINILIBX_DIR		= libs/minilibx-linux
 
 CC					= cc
 CCF_STRICT			= -Wall -Wextra -Werror
 CCF_DEBUG			= -g3 -D VERBOSE=1
 LIBFT				= $(LIBFT_DIR)/libft.a
-LIBS				= -pthread $(LIBFT)
+MINILIBX			= $(MINILIBX_DIR)/libmlx.a
+LIBS				= $(LIBFT) $(MINILIBX)
 
 RM					= rm -rf
 
@@ -30,8 +32,8 @@ OBJS_MANDATORY		= $(addprefix $(OBJS_DIR)/,$(FILES_MANDATORY:.c=.o))
 all: $(NAME);
 
 
-$(NAME): $(OBJS_MANDATORY) $(LIBFT)
-	$(CC) $(OBJS_MANDATORY) $(LIBS) -o $(NAME)
+$(NAME): $(OBJS_MANDATORY) $(LIBS)
+	$(CC) $(OBJS_MANDATORY) $(LIBS) -lXext -lX11 -o $(NAME)
 
 $(OBJS_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
@@ -45,11 +47,14 @@ rebuild:
 	@$(CC) $(CCF_STRICT) $(CCF_INCL_MANDATORY) $(SRCS_MANDATORY) $(LIBS) -o $(NAME)
 
 ################################################################################
-# LIBFT
+# LIBS
 ################################################################################
 
 $(LIBFT):
 	make all -C $(LIBFT_DIR)
+
+$(MINILIBX):
+	make all -C $(MINILIBX_DIR)
 
 ################################################################################
 # CLEAN UP

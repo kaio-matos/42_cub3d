@@ -6,11 +6,14 @@
 /*   By: kmatos-s <kmatos-s@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 19:51:43 by kmatos-s          #+#    #+#             */
-/*   Updated: 2023/07/26 19:55:21 by kmatos-s         ###   ########.fr       */
+/*   Updated: 2023/07/26 21:45:50 by kmatos-s         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>
+#ifndef CUB_H
+# include <stdio.h>
+# include <mlx.h>
+# include <math.h>
 
 /**
 	Allowed Functions:
@@ -24,3 +27,5 @@
 
 	- All functions of the MinilibX
 */
+
+#endif
