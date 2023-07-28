@@ -9,7 +9,8 @@ CCF_STRICT			= -Wall -Wextra -Werror
 CCF_DEBUG			= -g3 -D VERBOSE=1
 LIBFT				= $(LIBFT_DIR)/libft.a
 MINILIBX			= $(MINILIBX_DIR)/libmlx.a
-LIBS				= $(LIBFT) $(MINILIBX)
+LIBS_TO_COMPILE		= $(LIBFT) $(MINILIBX)
+LIBS				= $(LIBS_TO_COMPILE) -lXext -lX11
 
 RM					= rm -rf
 
@@ -34,18 +35,18 @@ OBJS_MANDATORY		= $(addprefix $(OBJS_DIR)/,$(FILES_MANDATORY:.c=.o))
 all: $(NAME);
 
 
-$(NAME): $(OBJS_MANDATORY) $(LIBS)
-	$(CC) $(OBJS_MANDATORY) $(LIBS) -lXext -lX11 -o $(NAME)
+$(NAME): $(OBJS_MANDATORY) $(LIBS_TO_COMPILE)
+	$(CC) $(OBJS_MANDATORY) $(LIBS) -o $(NAME)
 
 $(OBJS_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CCF_STRICT) $(CCF_INCL_MANDATORY) -c $< -o $@
 
-debug:
+debug: $(LIBS_TO_COMPILE)
 	@echo "Compiling..."
-	@$(CC) $(CCF_DEBUG) $(CCF_INCL_MANDATORY) $(SRCS_MANDATORY) -o $(NAME)
+	@$(CC) $(CCF_DEBUG) $(CCF_INCL_MANDATORY) $(SRCS_MANDATORY) $(LIBS) -o $(NAME)
 
-rebuild:
+rebuild: $(LIBS_TO_COMPILE)
 	@$(CC) $(CCF_STRICT) $(CCF_INCL_MANDATORY) $(SRCS_MANDATORY) $(LIBS) -o $(NAME)
 
 ################################################################################
