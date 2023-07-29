@@ -1,45 +1,98 @@
 #include <cub.h>
 
-static int	renderer(t_posd pos, t_posd dir, t_posd plane, int x)
+static int	renderer(int world_map[MAP_HEIGHT][MAP_WIDTH], t_posd pos, t_posd dir, t_posd plane, int x)
 {
 	double	camera_x;
 	t_posd	ray_dir;
 	t_posi	map; // integer map position
-	t_posd	side_dist; // side distance
-	t_posd	delta_dist; // delta distance
+	double	side_dist_x;  // side x distance --> The distance between the first intersection with the next x square
+	double	side_dist_y;  // side y distance --> The distance between the first intersection with the next y square
+	double	delta_dist_x; // delta x distance -> The distance between the next intersection with the next x square
+	double	delta_dist_y; // delta y distance -> The distance between the next intersection with the next y square
 	t_posd	perp_dist; // perpendicular distance
 	t_posi	step;
 	int		has_hit_wall;
 	int		side; // was a NS or a EW wall hit
 
 	camera_x = 2 * x / MAP_WIDTH - 1;
-	ray_dir.x = dir.x * plane.x * camera_x;
-	ray_dir.y = dir.y * plane.y * camera_x;
+	ray_dir.x = dir.x + plane.x * camera_x;
+	ray_dir.y = dir.y + plane.y * camera_x;
 
 	map.x = pos.x;
 	map.y = pos.y;
 
 	if (ray_dir.x == 0)
-		delta_dist.x = 1e30;
+		delta_dist_x = 1e30;
 	else
-		delta_dist.x = fabs(1 / ray_dir.x);
+		delta_dist_x = fabs(1 / ray_dir.x);
 	if (ray_dir.y == 0)
-		delta_dist.y = 1e30;
+		delta_dist_y = 1e30;
 	else
-		delta_dist.y = fabs(1 / ray_dir.y);
+		delta_dist_y = fabs(1 / ray_dir.y);
+
+
+	// Calculate the step
+	// Calculate the first side distance (for both axis) after casting the ray
+	if (ray_dir.x < 0)
+	{
+		step.x = -1;
+		side_dist_x = (pos.x - map.x) * delta_dist_x;
+	}
+	else
+	{
+		step.x = 1;
+		side_dist_x = (map.x + 1.0 - pos.x) * delta_dist_x;
+	}
+	if (ray_dir.y < 0)
+	{
+		step.y = -1;
+		side_dist_y = (pos.y - map.y) * delta_dist_y;
+	}
+	else
+	{
+		step.y = 1;
+		side_dist_y = (map.y + 1.0 - pos.y) * delta_dist_y;
+	}
 
 	has_hit_wall = 0;
+
+
+	//perform DDA
+	while (has_hit_wall == 0)
+	{
+		//jump to next map square, either in x-direction, or in y-direction
+		if (side_dist_x < side_dist_y)
+		{
+			side_dist_x += delta_dist_x;
+			map.x += step.x;
+			side = 0;
+		}
+		else
+		{
+			side_dist_y += delta_dist_y;
+			map.y += step.y;
+			side = 1;
+		}
+		//Check if ray has hit a wall
+		if (world_map[map.x][map.y] > 0) has_hit_wall = 1;
+	}
+	printf("has hit wall ? : %i\n", has_hit_wall);
 
 }
 
 int	w__render(int world_map[MAP_HEIGHT][MAP_WIDTH])
 {
 	int		x;
-	t_posd	pos;
-	t_posd	dir;
-	t_posd	plane;
+	t_posd	pos; // x and y start position
+	t_posd	dir; // vector -> initial direction vector
+	t_posd	plane; // vector -> the 2d raycaster version of camera plane
+
+	double	time; //time of current frame
+	double	oldTime; //time of previous frame
 
 	x = 0;
+	time = 0;
+	oldTime = 0;
 	pos.x = 22;
 	pos.y = 12;
 
@@ -51,7 +104,7 @@ int	w__render(int world_map[MAP_HEIGHT][MAP_WIDTH])
 
 	while (x < MAP_WIDTH)
 	{
-		renderer(pos, dir, plane, x);
+		renderer(world_map, pos, dir, plane, x);
 		x++;
 	}
 
