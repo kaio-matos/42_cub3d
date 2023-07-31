@@ -9,12 +9,12 @@ static int	renderer(int world_map[MAP_HEIGHT][MAP_WIDTH], t_posd pos, t_posd dir
 	double	side_dist_y;  // side y distance --> The distance between the first intersection with the next y square
 	double	delta_dist_x; // delta x distance -> The distance between the next intersection with the next x square
 	double	delta_dist_y; // delta y distance -> The distance between the next intersection with the next y square
-	t_posd	perp_dist; // perpendicular distance
+	double	perp_wall_dist; // perpendicular distance
 	t_posi	step;
 	int		has_hit_wall;
 	int		side; // was a NS or a EW wall hit
 
-	camera_x = 2 * x / MAP_WIDTH - 1;
+	camera_x = 2 * x / SCREEN_WIDTH - 1;
 	ray_dir.x = dir.x + plane.x * camera_x;
 	ray_dir.y = dir.y + plane.y * camera_x;
 
@@ -76,8 +76,10 @@ static int	renderer(int world_map[MAP_HEIGHT][MAP_WIDTH], t_posd pos, t_posd dir
 		//Check if ray has hit a wall
 		if (world_map[map.x][map.y] > 0) has_hit_wall = 1;
 	}
-	printf("has hit wall ? : %i\n", has_hit_wall);
 
+      //Calculate distance projected on camera direction (Euclidean distance would give fisheye effect!)
+      if (side == 0) perp_wall_dist = (side_dist_x - delta_dist_x);
+      else perp_wall_dist = (side_dist_y - delta_dist_y);
 }
 
 int	w__render(int world_map[MAP_HEIGHT][MAP_WIDTH])
