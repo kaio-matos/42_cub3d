@@ -1,5 +1,14 @@
 #include <cub.h>
 
+static void	draw_pixel(t_posi p, int color) {
+	mlx_pixel_put(w()->init, w()->window, p.x, p.y, color);
+}
+
+static void	draw_linei(t_posi p1, t_posi p2, int color)
+{
+	//todo
+}
+
 static int	renderer(int world_map[MAP_HEIGHT][MAP_WIDTH], t_posd pos, t_posd dir, t_posd plane, int x)
 {
 	double	camera_x;
@@ -13,6 +22,10 @@ static int	renderer(int world_map[MAP_HEIGHT][MAP_WIDTH], t_posd pos, t_posd dir
 	t_posi	step;
 	int		has_hit_wall;
 	int		side; // was a NS or a EW wall hit
+	int		line_height;
+	int		draw_start;
+	int		draw_end;
+	int		color;
 
 	camera_x = 2 * x / SCREEN_WIDTH - 1;
 	ray_dir.x = dir.x + plane.x * camera_x;
@@ -77,9 +90,39 @@ static int	renderer(int world_map[MAP_HEIGHT][MAP_WIDTH], t_posd pos, t_posd dir
 		if (world_map[map.x][map.y] > 0) has_hit_wall = 1;
 	}
 
-      //Calculate distance projected on camera direction (Euclidean distance would give fisheye effect!)
-      if (side == 0) perp_wall_dist = (side_dist_x - delta_dist_x);
-      else perp_wall_dist = (side_dist_y - delta_dist_y);
+	//Calculate distance projected on camera direction (Euclidean distance would give fisheye effect!)
+	if (side == 0) perp_wall_dist = (side_dist_x - delta_dist_x);
+	else perp_wall_dist = (side_dist_y - delta_dist_y);
+
+
+	//Calculate height of line to draw on screen
+	line_height = (SCREEN_HEIGHT / perp_wall_dist);
+
+	//calculate lowest and highest pixel to fill in current stripe
+	draw_start = -line_height / 2 + SCREEN_HEIGHT / 2;
+	if (draw_start < 0) draw_start = 0;
+	draw_end = line_height / 2 + SCREEN_HEIGHT / 2;
+	if (draw_end >= SCREEN_HEIGHT) draw_end = SCREEN_HEIGHT - 1;
+
+
+	//choose wall color
+	switch (world_map[map.x][map.y])
+	{
+		case 1:  color = 0xFFCCE5;  break; //red
+		case 2:  color = 0x00FF00;  break; //green
+		case 3:  color = 0x0000FF;   break; //blue
+		case 4:  color = 0xFFFFFF;  break; //white
+		default: color = 0xFFFF00; break; //yellow
+	}
+
+	// give x and y sides different brightness
+	if (side == 1) color = color / 2;
+
+	// draw the pixels of the stripe as a vertical line
+	// verLine(x, draw_start, drawEnd, color);
+	t_posi p = { x: 0, y: 0 };
+	t_posi pend = { x: draw_start, y: draw_start };
+	draw_linei(p, pend, color);
 }
 
 int	w__render(int world_map[MAP_HEIGHT][MAP_WIDTH])
@@ -104,11 +147,23 @@ int	w__render(int world_map[MAP_HEIGHT][MAP_WIDTH])
 	plane.x = 0;
 	plane.y = 0.66;
 
-	while (x < MAP_WIDTH)
-	{
-		renderer(world_map, pos, dir, plane, x);
-		x++;
-	}
+	// int	TILE_SIZE = 32;
+
+	t_posi	center = {x: 300, y: 250};
+	t_posi	current = {x: 490, y: 300};
+	draw_pixel(current,0x00FF00);
+	draw_linei(center, current, 0xFFFFFF);
+
+
+	// while (x < MAP_WIDTH)
+	// {
+	// 	t_posi	center = {x: 300, y: 250};
+	// 	t_posi	current = {x: 490, y: 300};
+	// 	draw_linei(center, current, 0xFFFFFF);
+
+	// 	// renderer(world_map, pos, dir, plane, x);
+	// 	x++;
+	// }
 
 	return (0);
 }
