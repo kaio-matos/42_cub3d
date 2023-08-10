@@ -24,7 +24,7 @@ void	w__open(void)
 	t_window	*win;
 
 	win = w();
-	win->window = mlx_new_window(win->init, win->width, win->height, "So_Long");
+	win->window = mlx_new_window(win->init, win->width, win->height, "Cub3d");
 	if (!win->window)
 		printf("MLX window could be opened\n"); // TODO: handle error
 }

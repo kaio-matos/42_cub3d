@@ -10,7 +10,7 @@ CCF_DEBUG			= -g3 -D VERBOSE=1
 LIBFT				= $(LIBFT_DIR)/libft.a
 MINILIBX			= $(MINILIBX_DIR)/libmlx.a
 LIBS_TO_COMPILE		= $(LIBFT) $(MINILIBX)
-LIBS				= $(LIBS_TO_COMPILE) -lXext -lX11
+LIBS				= $(LIBS_TO_COMPILE) -lm -lXext -lX11
 
 RM					= rm -rf
 
@@ -25,9 +25,10 @@ endif
 NAME				= cub3D
 CCF_INCL_MANDATORY	= -I ./$(SRC_DIR)/includes -I $(LIBFT_DIR) -I $(MINILIBX_DIR)
 
-C_FILES_WINDOW		= $(addprefix window/,window.c w__render.c)
+C_FILES_WINDOW		= $(addprefix window/,window.c w__render.c w__draw.c)
+C_FILES_MODEL		= $(addprefix model/,position/position.c)
 
-C_FILES_MANDATORY	= main.c $(C_FILES_WINDOW)
+C_FILES_MANDATORY	= main.c $(C_FILES_WINDOW) $(C_FILES_MODEL)
 FILES_MANDATORY		= $(C_FILES_MANDATORY)
 SRCS_MANDATORY		= $(addprefix $(SRC_DIR)/,$(FILES_MANDATORY))
 OBJS_MANDATORY		= $(addprefix $(OBJS_DIR)/,$(FILES_MANDATORY:.c=.o))
