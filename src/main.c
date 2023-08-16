@@ -9,17 +9,6 @@ t_state *state(void)
 
 static void move_player(int key)
 {
-	if (key == KEY_W || key == KEY_UP)
-	{
-		state()->player_pos.x += state()->player_delta.x * 5;
-		state()->player_pos.y += state()->player_delta.y * 5;
-	}
-	if (key == KEY_S || key == KEY_DOWN)
-	{
-		state()->player_pos.x -= state()->player_delta.x * 5;
-		state()->player_pos.y -= state()->player_delta.y * 5;
-	}
-
 	int	xo = 0;
 	if (state()->player_delta.x < 0)
 		xo = -20;
@@ -41,11 +30,17 @@ static void move_player(int key)
 	if (key == KEY_W || key == KEY_UP)
 	{
 		if (state()->world_map[ipy * MAP_WIDTH + ipx_add_xo] == 0)
-			state()->player_pos.x += state()->player_delta.x * 0.2;
+			state()->player_pos.x += state()->player_delta.x * 10;
 		if (state()->world_map[ipy_add_yo * MAP_WIDTH + ipx] == 0)
-			state()->player_pos.y += state()->player_delta.y * 0.2;
+			state()->player_pos.y += state()->player_delta.y * 10;
 	}
-
+	if (key == KEY_S || key == KEY_DOWN)
+	{
+		if (state()->world_map[ipy * MAP_WIDTH + ipx_sub_xo] == 0)
+			state()->player_pos.x -= state()->player_delta.x * 10;
+		if (state()->world_map[ipy_sub_yo * MAP_WIDTH + ipx] == 0)
+			state()->player_pos.y -= state()->player_delta.y * 10;
+	}
 	if (key == KEY_A || key == KEY_LEFT)
 	{
 		state()->player_angle += 5;
