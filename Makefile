@@ -25,7 +25,7 @@ endif
 NAME				= cub3D
 CCF_INCL_MANDATORY	= -I ./$(SRC_DIR)/includes -I $(LIBFT_DIR) -I $(MINILIBX_DIR)
 
-C_FILES_WINDOW		= $(addprefix window/,window.c w__render.c w__draw.c)
+C_FILES_WINDOW		= $(addprefix window/,window.c w__render.c w__draw.c w__cast.c)
 C_FILES_MODEL		= $(addprefix model/,position/position.c)
 
 C_FILES_MANDATORY	= main.c $(C_FILES_WINDOW) $(C_FILES_MODEL)

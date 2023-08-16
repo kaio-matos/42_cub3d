@@ -6,7 +6,7 @@
 /*   By: kmatos-s <kmatos-s@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 19:51:43 by kmatos-s          #+#    #+#             */
-/*   Updated: 2023/08/14 20:24:59 by kmatos-s         ###   ########.fr       */
+/*   Updated: 2023/08/15 21:15:05 by kmatos-s         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 # include <libft.h>
 # include <mlx.h>
 # include <math.h>
+# include <structs.h>
 
 /**
 	Allowed Functions:
@@ -64,36 +65,6 @@
 # define DR 0.0174533 // one degree in radians
 
 
-typedef struct s_window
-{
-	void	*window;
-	void	*init;
-	int		width;
-	int		height;
-}	t_window;
-
-typedef struct s_posi
-{
-	int	x;
-	int	y;
-}	t_posi;
-
-typedef struct s_posd
-{
-	double	x;
-	double	y;
-}	t_posd;
-
-
-typedef struct s_state
-{
-	t_posd	player_pos;
-	t_posd	player_delta;
-	double	player_angle;
-	int		world_map[64];
-	double	player_move_speed;
-	double	player_rot_speed;
-}	t_state;
 
 /******************************************************************************\
 * WINDOW																	   *
@@ -113,6 +84,7 @@ void		w__draw_square(t_posd corner1, t_posd corner4, int color);
 void		w__draw_square_fill(t_posd corner1, t_posd corner4, int color);
 void		w__draw_circle(t_posd p, int r, int color);
 void		w__draw_circle_fill(t_posd p, int r, int color);
+t_cast_result	cast_ray(t_posd from, int angle);
 
 /******************************************************************************\
 * MODELS																	   *
