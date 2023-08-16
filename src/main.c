@@ -9,39 +9,56 @@ t_state *state(void)
 
 static void move_player(int key)
 {
-	t_posd	pos;
-	t_posd	dir;
-	double	move_speed;
-
-	pos = state()->player_pos;
-	dir = state()->player_dir;
-	move_speed = state()->player_move_speed;
-
 	if (key == KEY_W || key == KEY_UP)
 	{
-		state()->player_pos.x += state()->player_delta.x;
-		state()->player_pos.y += state()->player_delta.y;
+		state()->player_pos.x += state()->player_delta.x * 5;
+		state()->player_pos.y += state()->player_delta.y * 5;
 	}
 	if (key == KEY_S || key == KEY_DOWN)
 	{
-		state()->player_pos.x -= state()->player_delta.x;
-		state()->player_pos.y -= state()->player_delta.y;
+		state()->player_pos.x -= state()->player_delta.x * 5;
+		state()->player_pos.y -= state()->player_delta.y * 5;
 	}
+
+	int	xo = 0;
+	if (state()->player_delta.x < 0)
+		xo = -20;
+	else
+		xo = 20;
+	int	yo = 0;
+	if (state()->player_delta.y < 0)
+		yo = -20;
+	else
+		yo = 20;
+	int	ipx = state()->player_pos.x / MAP_LENGTH;
+	int	ipx_add_xo = (state()->player_pos.x + xo) / MAP_LENGTH;
+	int	ipx_sub_xo = (state()->player_pos.x - xo) / MAP_LENGTH;
+
+	int	ipy = state()->player_pos.y / MAP_LENGTH;
+	int	ipy_add_yo = (state()->player_pos.y + yo) / MAP_LENGTH;
+	int	ipy_sub_yo = (state()->player_pos.y - yo) / MAP_LENGTH;
+
+	if (key == KEY_W || key == KEY_UP)
+	{
+		if (state()->world_map[ipy * MAP_WIDTH + ipx_add_xo] == 0)
+			state()->player_pos.x += state()->player_delta.x * 0.2;
+		if (state()->world_map[ipy_add_yo * MAP_WIDTH + ipx] == 0)
+			state()->player_pos.y += state()->player_delta.y * 0.2;
+	}
+
 	if (key == KEY_A || key == KEY_LEFT)
 	{
-		state()->player_angle -= 0.1;
-		if (state()->player_angle < 0)
-			state()->player_angle +=2*PI;
-		state()->player_delta.x = cos(state()->player_angle) * 5;
-		state()->player_delta.y = sin(state()->player_angle) * 5;
+		state()->player_angle += 5;
+		state()->player_angle = fix_angle(state()->player_angle);
+		state()->player_delta.x = cos(degree_to_radians(state()->player_angle));
+		state()->player_delta.y = -sin(degree_to_radians(state()->player_angle));
 	}
 	if (key == KEY_D || key == KEY_RIGHT)
 	{
-		state()->player_angle += 0.1;
-		if (state()->player_angle > 2*PI)
-			state()->player_angle -=2*PI;
-		state()->player_delta.x = cos(state()->player_angle) * 5;
-		state()->player_delta.y = sin(state()->player_angle) * 5;
+		state()->player_angle -= 5;
+		state()->player_angle = fix_angle(state()->player_angle);
+		state()->player_delta.x = cos(degree_to_radians(state()->player_angle));
+		state()->player_delta.y = -sin(degree_to_radians(state()->player_angle));
 	}
 	mlx_clear_window(w()->init, w()->window);
 }
@@ -91,19 +108,15 @@ int	main(void)
 		4,4,4,4,4,4,4,4,
 	};
 
-	ft_memcpy(state()->world_map, world_map, 24 * 24 * sizeof(int));
+	ft_memcpy(state()->world_map, world_map, MAP_LENGTH * sizeof(int));
 
-	state()->player_pos.x = 300;
-	state()->player_pos.y = 300;
+	state()->player_pos.x = 150;
+	state()->player_pos.y = 400;
 
-	state()->player_dir.x = -1;
-	state()->player_dir.y = 0;
+	state()->player_angle = 90;
 
-	state()->player_plane.x = 0;
-	state()->player_plane.y = 0.66;
-
-	state()->player_delta.x = cos(state()->player_angle) * 5;
-	state()->player_delta.y = sin(state()->player_angle) * 5;
+	state()->player_delta.x = cos(degree_to_radians(state()->player_angle));
+	state()->player_delta.y = -sin(degree_to_radians(state()->player_angle));
 
 	w__init(SCREEN_WIDTH, SCREEN_HEIGHT);
 	w__open();

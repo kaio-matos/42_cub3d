@@ -6,7 +6,7 @@
 /*   By: kmatos-s <kmatos-s@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 19:51:43 by kmatos-s          #+#    #+#             */
-/*   Updated: 2023/08/09 21:56:58 by kmatos-s         ###   ########.fr       */
+/*   Updated: 2023/08/14 20:24:59 by kmatos-s         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,10 +30,14 @@
 */
 
 # define WINDOW_X 16777216
+
 # define MAP_WIDTH 8
 # define MAP_HEIGHT 8
+# define MAP_LENGTH 64
+
 # define SCREEN_WIDTH 1024
 # define SCREEN_HEIGHT 512
+
 # define KEY_ESC 65307
 # define KEY_W 119
 # define KEY_A 97
@@ -52,7 +56,7 @@
 # define BLUE 0x0000FF
 # define PURPLE 0x912cee
 
-# define PI 3.14159
+# define PI 3.14159265358979323846
 // Circle quadrants start angles
 # define P2 PI / 2
 # define P3 3 * PI / 2
@@ -81,21 +85,11 @@ typedef struct s_posd
 }	t_posd;
 
 
-typedef struct s_cast_result
-{
-	t_posd	delta_length;
-	t_posd	side_length;
-	t_posi	map_intersection_pos;
-	int		side;
-}	t_cast_result;
-
 typedef struct s_state
 {
 	t_posd	player_pos;
 	t_posd	player_delta;
 	double	player_angle;
-	t_posd	player_dir;
-	t_posd	player_plane;
 	int		world_map[64];
 	double	player_move_speed;
 	double	player_rot_speed;
@@ -142,5 +136,12 @@ t_state *state(void);
 \******************************************************************************/
 
 void	print_map(int array[MAP_HEIGHT][MAP_WIDTH]);
+
+
+/******************************************************************************\
+* MATH																		   *
+\******************************************************************************/
+double	degree_to_radians(double degree);
+int		fix_angle(int degree);
 
 #endif

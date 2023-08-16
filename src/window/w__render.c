@@ -1,35 +1,16 @@
 #include <cub.h>
 
-void	w__draw_pixeli(t_posi p, int color)
-{
-	mlx_pixel_put(w()->init, w()->window, p.x, p.y, color);
-}
-
-void	w__draw_linei(t_posi p1, t_posi p2, int color)
-{
-	int		i;
-	t_posi	d;
-	t_posi	increment;
-	int	steps;
-
-	i = 0;
-	d.x = (p2.x - p1.x);
-	d.y = (p2.y - p1.y);
-	steps = abs(d.x) > abs(d.y) ? abs(d.x) : abs(d.y);
-	increment.x = d.x / steps;
-	increment.y = d.y / steps;
-	while (i <= steps)
-	{
-		w__draw_pixeli(p1, color);
-		p1.x += increment.x;
-		p1.y += increment.y;
-		i++;
-	}
-}
-
 double	degree_to_radians(double degree)
 {
 	return (degree * PI/180);
+}
+int		fix_angle(int degree)
+{
+	if (degree > 359)
+		degree -= 360;
+	if (degree < 0)
+		degree += 360;
+	return degree;
 }
 
 double	get_vector_angle(t_posd vector)
@@ -37,158 +18,249 @@ double	get_vector_angle(t_posd vector)
 	return (atan2(vector.y, vector.x));
 }
 
-void	print_cast_result(t_cast_result result)
-{
-	print_posd(result.delta_length, "result.delta_length");
-	print_posd(result.side_length, "result.side_length");
-	print_posi(result.map_intersection_pos, "result.map_intersection_pos");
-	printf("side %i\n", result.side);
-	printf("\n\n");
-}
-
 double dist(double ax, double ay, double bx, double by, double ang)
 {
-	return (sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay)));
+	return (cos(degree_to_radians(ang)) * (bx - ax) - sin(degree_to_radians(ang)) * (by - ay));
 }
+
+typedef struct s_closer_cast_result {
+	t_posd	ray;
+	t_posd	offset;
+	int		dof;
+}	t_closer_cast_result;
+
+
+typedef struct s_cast_result {
+	t_posd	ray;
+	int		distance;
+}	t_cast_result;
+
+
+/**
+ * It will return the position of the
+ * first encounter with a boundary in the x axis
+ * and also the offset
+*/
+t_closer_cast_result	cast_x_closer_ray(t_posd from, int angle)
+{
+	t_closer_cast_result	r;
+	double					tang;
+
+	// Check Horizontal Lines
+	r.dof = 0;
+	tang = tan(degree_to_radians(angle));
+	tang = 1.0 / tang;
+	// 180degrees
+	if (sin(degree_to_radians(angle)) > 0.001)  // looking up
+	{
+		//>> 6 =  dividing by MAP_LENGTH
+		r.ray.y = (((int) from.y >> 6) << 6) - 0.0001;
+		r.ray.x = (from.y - r.ray.y) * tang + from.x;
+		r.offset.y = -MAP_LENGTH;
+		r.offset.x = -r.offset.y * tang;
+	}
+	else if (sin(degree_to_radians(angle)) < -0.001)  // looking down
+	{
+		r.ray.y = (((int) from.y >> 6) << 6) + MAP_LENGTH;
+		r.ray.x = (from.y - r.ray.y) * tang + from.x;
+		r.offset.y = MAP_LENGTH;
+		r.offset.x = -r.offset.y * tang;
+	}
+	else  // looking straght left or right
+	{
+		r.ray.x = from.x;
+		r.ray.y = from.y;
+		r.dof = 8;
+	}
+	return (r);
+}
+
+/**
+ * It will return the position of the
+ * first encounter with a boundary in the y axis
+ * and also the offset
+*/
+t_closer_cast_result	cast_y_closer_ray(t_posd from, int angle)
+{
+	t_closer_cast_result	r;
+	double					tang;
+
+	r.dof = 0;
+	tang = tan(degree_to_radians(angle));
+	// 180degrees
+	if (cos(degree_to_radians(angle)) > 0.001)  // looking left
+	{
+		//>> 6 =  dividing by MAP_LENGTH
+		r.ray.x = (((int) from.x >> 6) << 6) + MAP_LENGTH;
+		r.ray.y = (from.x - r.ray.x) * tang + from.y;
+		r.offset.x = MAP_LENGTH;
+		r.offset.y = -r.offset.x * tang;
+	}
+	else if (cos(degree_to_radians(angle)) < -0.001)  // looking right
+	{
+		r.ray.x = (((int) from.x >> 6) << 6) - 0.0001;
+		r.ray.y = (from.x - r.ray.x) * tang + from.y;
+		r.offset.x = -MAP_LENGTH;
+		r.offset.y = -r.offset.x * tang;
+	}
+	else // looking up or down, no hit
+	{
+		r.ray.x = from.x;
+		r.ray.y = from.y;
+		r.dof = 8;
+	}
+	return (r);
+}
+
+/**
+ * It will return the position of the
+ * next encounter with a boundary in the x axis
+*/
+t_cast_result	cast_x_ray(int angle, t_posd from, t_posd offset)
+{
+	t_cast_result	r;
+	t_posi			map;
+	int				mp;
+	double			ang_radians;
+	int				dof;
+
+	dof = 0;
+	r.distance = 100000;
+	ang_radians = degree_to_radians(angle);
+	while (dof < 8)
+	{
+		map.x = (int) (from.x) >> 6;
+		map.y = (int) (from.y) >> 6;
+		mp = map.y * MAP_WIDTH + map.x;
+
+		if (mp > 0 && mp < MAP_WIDTH * MAP_HEIGHT && state()->world_map[mp] > 0)
+		{
+			r.distance = cos(ang_radians) * (from.x - state()->player_pos.x) -
+				sin(ang_radians) * (from.y - state()->player_pos.y);
+			dof = 8;
+		}
+		else
+		{
+			from.x += offset.x;
+			from.y += offset.y;
+			dof += 1;
+		}
+	}
+	r.ray = from;
+	return (r);
+}
+
+/**
+ * It will return the position of the
+ * next encounter with a boundary in the y axis
+*/
+t_cast_result	cast_y_ray(int angle, t_posd from, t_posd offset)
+{
+	t_cast_result	r;
+	t_posi			map;
+	int				mp;
+	double			ang_radians;
+	int				dof;
+
+	dof = 0;
+	r.distance = 100000;
+	ang_radians = degree_to_radians(angle);
+	while (dof < 8)
+	{
+		map.x = (int) (from.x) >> 6;
+		map.y = (int) (from.y) >> 6;
+		mp = map.y * MAP_WIDTH + map.x;
+
+		if (mp > 0 && mp < MAP_WIDTH * MAP_HEIGHT && state()->world_map[mp] > 0)
+		{
+			r.distance = cos(ang_radians) * (from.x - state()->player_pos.x) -
+				sin(ang_radians) * (from.y - state()->player_pos.y);
+			dof = 8;
+		} // hit
+		else
+		{
+			from.x += offset.x;
+			from.y += offset.y;
+			dof += 1;
+		}
+	}
+	r.ray = from;
+	return (r);
+}
+
 
 void	render_rays()
 {
-	int		r;
-	int		mx;
-	int		my;
-	int		mp;
-	int		dof;
-	double	rx;
-	double	ry;
-	double	ra;
-	double	xoffset;
-	double	yoffset;
-	double	distT;
+	int						r;
+	int						mx;
+	int						my;
+	int						mp;
+	int						dof;
+	int						side;
+	double					vx;
+	double					vy;
+	double					ry;
+	double					rx;
+	double					xoffset;
+	double					ra;
+	double					distH;
+	double					yoffset;
+	double					distT;
+	double					distV;
+	double					ca;
+	double					Tan;
+	t_closer_cast_result	closer_cast;
+	t_cast_result			cast;
 
-	ra = state()->player_angle - DR*30;
-	// Make sure the angle is withing bounds
-	if (ra < 0)
-		ra += 2 * PI;
-	if (ra > 2 * PI)
-		ra -= 2 * PI;
+	ra = fix_angle(state()->player_angle + 30);
 
 	for (r = 0; r < 66; r++)
 	{
+		side = 0;
+		// Check Vertical Lines;
+		Tan = tan(degree_to_radians(ra));
+		closer_cast = cast_y_closer_ray(state()->player_pos, ra);
+		dof = closer_cast.dof;
+		rx = closer_cast.ray.x;
+		ry = closer_cast.ray.y;
+		xoffset = closer_cast.offset.x;
+		yoffset = closer_cast.offset.y;
+
+		distV = 100000;
+		if (closer_cast.dof != 8)
+		{
+			cast = cast_y_ray(ra, closer_cast.ray, closer_cast.offset);
+			distV = cast.distance;
+			rx = cast.ray.x;
+			ry = cast.ray.y;
+		}
+		vx = rx;
+		vy = ry;
+
 		// Check Horizontal Lines
-		dof = 0;
-		double distH = 10000000;
-		double hx = state()->player_pos.x;
-		double hy = state()->player_pos.y;
-		double aTan = -1 / tan(ra); // fix issue with big result
-		// 180degrees
-		if (ra > PI)  // looking up
-		{
-			//>> 6 dividign by 64
-			ry = (((int) state()->player_pos.y >> 6) << 6) - 0.0001;
-			rx = (state()->player_pos.y - ry) * aTan + state()->player_pos.x;
-			yoffset = -64;
-			xoffset = -yoffset * aTan;
-		}
-		if (ra < PI)  // looking down
-		{
-			ry = (((int) state()->player_pos.y >> 6) << 6) + 64;
-			rx = (state()->player_pos.y - ry) * aTan + state()->player_pos.x;
-			yoffset = 64;
-			xoffset = -yoffset * aTan;
-		}
-		if (ra == 0 || ra == PI || ra == 2*PI)  // looking straght left or right
-		{
-			rx = state()->player_pos.x;
-			ry = state()->player_pos.y;
-			dof = 8;
-		}
+		distH = 100000;
+		Tan = 1.0 / Tan;
+		closer_cast = cast_x_closer_ray(state()->player_pos, ra);
+		dof = closer_cast.dof;
+		rx = closer_cast.ray.x;
+		ry = closer_cast.ray.y;
+		xoffset = closer_cast.offset.x;
+		yoffset = closer_cast.offset.y;
 
-		while (dof < 8)
+		if (closer_cast.dof != 8)
 		{
-			mx = (int) (rx) >> 6;
-			my = (int) (ry) >> 6;
-			mp = my * 8 + mx;
-
-			if (mp > 0 && mp < 8 * 8 && state()->world_map[mp] > 0)
-			{
-				hx = rx;
-				hy = ry;
-				distH = dist(state()->player_pos.x, state()->player_pos.y, hx, hy, ra);
-				dof = 8;
-			}
-			else
-			{
-				rx += xoffset;
-				ry += yoffset;
-				dof += 1;
-			}
-		}
-
-		// Check Vertical Lines
-		dof = 0;
-		double distV = 10000000;
-		double vx = state()->player_pos.x;
-		double vy = state()->player_pos.y;
-		double nTan = -tan(ra);
-		// 180degrees
-		if (ra > P2 && ra < P3)  // looking left
-		{
-			//>> 6 dividign by 64
-			rx = (((int) state()->player_pos.x >> 6) << 6) - 0.0001;
-			ry = (state()->player_pos.x - rx) * nTan + state()->player_pos.y;
-			xoffset = -64;
-			yoffset = -xoffset * nTan;
-		}
-		if (ra < P2 || ra > P3)  // looking right
-		{
-			rx = (((int) state()->player_pos.x >> 6) << 6) + 64;
-			ry = (state()->player_pos.x - rx) * nTan + state()->player_pos.y;
-			xoffset = 64;
-			yoffset = -xoffset * nTan;
-		}
-		if (ra == 0 || ra == PI || ra == 2*PI)  // looking straght left or right
-		{
-			rx = state()->player_pos.x;
-			ry = state()->player_pos.y;
-			dof = 8;
-		}
-
-		while (dof < 8)
-		{
-			mx = (int) (rx) >> 6;
-			my = (int) (ry) >> 6;
-			mp = my * 8 + mx;
-
-			if (mp > 0 && mp < 8 * 8 && state()->world_map[mp] > 0)
-			{
-				vx = rx;
-				vy = ry;
-				distV = dist(state()->player_pos.x, state()->player_pos.y, vx, vy, ra);
-				dof = 8;
-			}
-			else
-			{
-				rx += xoffset;
-				ry += yoffset;
-				dof += 1;
-			}
+			cast = cast_x_ray(ra, closer_cast.ray, closer_cast.offset);
+			distH = cast.distance;
+			rx = cast.ray.x;
+			ry = cast.ray.y;
 		}
 
 		// Get the smaller distance
-		int side;
 		if (distV < distH)
 		{
 			rx = vx;
 			ry = vy;
-			distT = distV;
-			side = 1;
-		}
-		if (distH < distV)
-		{
-			rx = hx;
-			ry = hy;
-			distT = distH;
-			side = 0;
+			distH = distV;
 		}
 
 		w__draw_line(
@@ -198,34 +270,26 @@ void	render_rays()
 		);
 
 		// 3D walls
-		double ca = state()->player_angle - ra;
-		if (ca < 0)
-			ca += 2 * PI;
-		if (ca > 2 * PI)
-			ca -= 2 * PI;
-		distT = distT * cos(ca);
-		double lineH = 64 * 320 / distT;
-		if (lineH > 320)
-			lineH = 320;
+		ca = fix_angle(state()->player_angle - ra);
+		distH = distH * cos(degree_to_radians(ca));
+		double lineH = MAP_LENGTH * 320 / distH;
+		if (lineH > SCREEN_HEIGHT)
+			lineH = SCREEN_HEIGHT;
 
-		double lineO = 160 - lineH / 2;
+		int	lineOff = SCREEN_HEIGHT / 2 - lineH / 2; // fancy way to divide by 2, who knows why.
 
 		int color = RED;
 		if (side == 1)
 			color = color * 0.99;
+
 		w__draw_line_weight(
-			create_posd(r * 8 + 530, lineO),
-			create_posd(r * 8 + 530, lineH + lineO),
+			create_posd(r * 8 + 530, lineOff),
+			create_posd(r * 8 + 530, lineH + lineOff),
 			color,
 			8
 		);
 
-		ra += DR;
-		// Make sure the angle is withing bounds
-		if (ra < 0)
-			ra += 2 * PI;
-		if (ra > 2 * PI)
-			ra -= 2 * PI;
+		ra = fix_angle(ra - 1);
 	}
 }
 
