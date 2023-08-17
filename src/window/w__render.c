@@ -23,6 +23,19 @@ double dist(double ax, double ay, double bx, double by, double ang)
 	return (cos(degree_to_radians(ang)) * (bx - ax) - sin(degree_to_radians(ang)) * (by - ay));
 }
 
+int		screen_pos_to_map_pos(t_posd pos)
+{
+	int	py;
+	int	px;
+	int	res;
+
+	py = pos.y / MAP_LENGTH;
+	px = pos.x / MAP_LENGTH;
+	res = (py * MAP_WIDTH) + px;
+	if (res > MAP_LENGTH) return (0);
+	return (res);
+}
+
 void	render_rays()
 {
 	int				r;
@@ -49,6 +62,17 @@ void	render_rays()
 			lineH = SCREEN_HEIGHT;
 		int	lineOff = SCREEN_HEIGHT / 2 - lineH / 2;
 		int color = RED;
+
+
+		switch (state()->world_map[screen_pos_to_map_pos(cast.ray)])
+		{
+			case 1:  color = 0xFF0000; break; //red
+			case 2:  color = 0x00FF00; break; //green
+			case 3:  color = 0x0000FF; break; //blue
+			case 4:  color = 0xFFFFFF; break; //white
+			default: color = 0xFFFF00; break; //yellow
+		}
+
 		w__draw_line_weight(
 			create_posd(r * 8 + 530, lineOff),
 			create_posd(r * 8 + 530, lineH + lineOff),
