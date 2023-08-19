@@ -57,28 +57,66 @@ void	render_rays()
 		// 3D walls
 		ca = fix_angle(state()->player_angle - ra);
 		dist = cast.distance * cos(degree_to_radians(ca));
-		double lineH = MAP_LENGTH * 320 / dist;
+		double lineH = (MAP_LENGTH * SCREEN_HEIGHT) / dist;
+		float ty_step = 32.0 / (float) lineH;
+		float ty_off = 0;
 		if (lineH > SCREEN_HEIGHT)
-			lineH = SCREEN_HEIGHT;
-		int	lineOff = SCREEN_HEIGHT / 2 - lineH / 2;
-		int color = RED;
-
-
-		switch (state()->world_map[screen_pos_to_map_pos(cast.ray)])
 		{
-			case 1:  color = 0xFF0000; break; //red
-			case 2:  color = 0x00FF00; break; //green
-			case 3:  color = 0x0000FF; break; //blue
-			case 4:  color = 0xFFFFFF; break; //white
-			default: color = 0xFFFF00; break; //yellow
+			ty_off = (lineH - SCREEN_HEIGHT) / 2.0;
+			lineH = SCREEN_HEIGHT;
+		}
+		int	lineOff = (SCREEN_HEIGHT >> 1) - ((int) lineH >> 1);
+		int color;
+
+		// switch (state()->world_map[screen_pos_to_map_pos(cast.ray)])
+		// {
+		// 	case 1:  color = 0xFF0000; break; //red
+		// 	case 2:  color = 0x00FF00; break; //green
+		// 	case 3:  color = 0x0000FF; break; //blue
+		// 	case 4:  color = 0xFFFFFF; break; //white
+		// 	default: color = 0xFFFF00; break; //yellow
+		// }
+		int y;
+		float ty = ty_off * ty_step;
+		float tx;
+
+		if (cast.shade == 1)
+		{
+			tx = (int) (cast.ray.x / 2.0) % 32;
+			if (ra > 180)
+				tx = 31 - tx;
+		} else
+		{
+			tx = (int) (cast.ray.y / 2.0) % 32;
+			if (ra < 90 && ra < 270)
+				tx = 31 - tx;
 		}
 
-		w__draw_line_weight(
-			create_posd(r * 8 + 530, lineOff),
-			create_posd(r * 8 + 530, lineH + lineOff),
-			color,
-			8
-		);
+		ty += 32;
+		for (y = 0; y < lineH; y++)
+		{
+			float c = All_Textures[(int) (ty) * 32 + (int) tx];
+			if (c == 1)
+				color = cast.shade == 0.5 ? 0xFFFFFF - 30 : 0xFFFFFF;
+			else
+				color = cast.shade == 0.5 ? 0x000000 + 30 : 0x000000;
+			int w = -4;
+			while (w < 4)
+			{
+				w__draw_pixel(
+					create_posd(r * 8 + 530 + w, lineOff + y),
+					color
+				);
+				w++;
+			}
+			// w__draw_line_weight(
+			// 	create_posd(r * 8 + 530, lineOff),
+			// 	create_posd(r * 8 + 530, lineOff + lineH),
+			// 	color,
+			// 	8
+			// );
+			ty += ty_step;
+		}
 		ra = fix_angle(ra - 1);
 	}
 }

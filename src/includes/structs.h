@@ -44,6 +44,7 @@ typedef struct s_closer_cast_result {
 typedef struct s_cast_result {
 	t_posd	ray;
 	int		distance;
+	float	shade;
 }	t_cast_result;
 
 #endif

@@ -195,9 +195,11 @@ t_cast_result	cast_ray(t_posd from, int angle)
 		ry = cast.ray.y;
 	}
 
+	cast.shade = 1;
 	// Get the smaller distance
 	if (distV < distH)
 	{
+		cast.shade = 0.5;
 		rx = vx;
 		ry = vy;
 		distH = distV;
