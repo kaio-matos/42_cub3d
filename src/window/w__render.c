@@ -36,7 +36,7 @@ int		screen_pos_to_map_pos(t_posd pos)
 	return (res);
 }
 
-void	render_rays()
+void	render_rays(t_img *image)
 {
 	int				r;
 	double			ra;
@@ -50,6 +50,7 @@ void	render_rays()
 	{
 		cast = cast_ray(state()->player_pos, ra);
 		w__draw_line(
+			image,
 			state()->player_pos,
 			cast.ray,
 			PURPLE
@@ -58,7 +59,7 @@ void	render_rays()
 		ca = fix_angle(state()->player_angle - ra);
 		dist = cast.distance * cos(degree_to_radians(ca));
 		double lineH = (MAP_LENGTH * SCREEN_HEIGHT) / dist;
-		float ty_step = 32.0 / (float) lineH;
+		float ty_step = 16.0 / (float) lineH;
 		float ty_off = 0;
 		if (lineH > SCREEN_HEIGHT)
 		{
@@ -68,75 +69,78 @@ void	render_rays()
 		int	lineOff = (SCREEN_HEIGHT >> 1) - ((int) lineH >> 1);
 		int color;
 
-		// switch (state()->world_map[screen_pos_to_map_pos(cast.ray)])
-		// {
-		// 	case 1:  color = 0xFF0000; break; //red
-		// 	case 2:  color = 0x00FF00; break; //green
-		// 	case 3:  color = 0x0000FF; break; //blue
-		// 	case 4:  color = 0xFFFFFF; break; //white
-		// 	default: color = 0xFFFF00; break; //yellow
-		// }
+		switch (state()->world_map[screen_pos_to_map_pos(cast.ray)])
+		{
+			case 1:  color = 0x00FF0000; break; //red
+			case 2:  color = 0x0000FF00; break; //green
+			case 3:  color = 0x000000FF; break; //blue
+			case 4:  color = 0x00FFFFFF; break; //white
+			default: color = 0x00FFFF00; break; //yellow
+		}
 		int y;
 		float ty = ty_off * ty_step;
 		float tx;
+		int PX_SIZE = 16;
 
 		if (cast.shade == 1)
 		{
-			tx = (int) (cast.ray.x / 2.0) % 32;
+			tx = (int) (cast.ray.x / 2.0) % PX_SIZE;
 			if (ra > 180)
-				tx = 31 - tx;
+				tx = PX_SIZE - tx;
 		} else
 		{
-			tx = (int) (cast.ray.y / 2.0) % 32;
+			tx = (int) (cast.ray.y / 2.0) % PX_SIZE;
 			if (ra < 90 && ra < 270)
-				tx = 31 - tx;
+				tx = PX_SIZE - tx;
 		}
 
-		ty += 32;
-		for (y = 0; y < lineH; y++)
-		{
-			float c = All_Textures[(int) (ty) * 32 + (int) tx];
-			if (c == 1)
-				color = cast.shade == 0.5 ? 0xFFFFFF - 30 : 0xFFFFFF;
-			else
-				color = cast.shade == 0.5 ? 0x000000 + 30 : 0x000000;
-			int w = -4;
-			while (w < 4)
-			{
-				w__draw_pixel(
-					create_posd(r * 8 + 530 + w, lineOff + y),
-					color
-				);
-				w++;
-			}
-			// w__draw_line_weight(
-			// 	create_posd(r * 8 + 530, lineOff),
-			// 	create_posd(r * 8 + 530, lineOff + lineH),
-			// 	color,
-			// 	8
-			// );
-			ty += ty_step;
-		}
+		ty += PX_SIZE;
+		// for (y = 0; y < lineH; y+=16)
+		// {
+		// 	float c = All_Textures[(int) (ty) * PX_SIZE + (int) tx];
+		// 	if (c == 1)
+		// 		color = cast.shade == 0.5 ? 0xFFFFFF - 30 : 0xFFFFFF;
+		// 	else
+		// 		color = cast.shade == 0.5 ? 0x000000 + 30 : 0x000000;
+		// 	t_posi p = create_posi(r * 8 + 530, lineOff + y);
+		// 	// w__draw_line_weight(
+		// 	// 	image,
+		// 	// 	create_posd(r * 8 + 530, lineOff),
+		// 	// 	create_posd(r * 8 + 530, lineOff + lineH),
+		// 	// 	color,
+		// 	// 	8
+		// 	// );
+		// 	ty += ty_step;
+		// }
+		w__draw_line_weight(
+			image,
+			create_posd(r * 8 + 530, lineOff),
+			create_posd(r * 8 + 530, lineOff + lineH),
+			cast.shade == 0.5 ? color : color,
+			8
+		);
 		ra = fix_angle(ra - 1);
 	}
 }
 
-void	render_player(void)
+void	render_player(t_img *image)
 {
 	w__draw_square_fill(
+		image,
 		create_posd(state()->player_pos.x - 4, state()->player_pos.y - 4),
 		create_posd(state()->player_pos.x + 4, state()->player_pos.y + 4),
 		PURPLE
 	);
 
 	w__draw_line(
+		image,
 		create_posd(state()->player_pos.x, state()->player_pos.y),
 		create_posd(state()->player_pos.x + state()->player_delta.x * 5, state()->player_pos.y + state()->player_delta.y * 5),
 		PURPLE
 	);
 }
 
-void	render_map()
+void	render_map(t_img *image)
 {
 	int	x;
 	int	y;
@@ -159,6 +163,7 @@ void	render_map()
 					default: color = 0xFFFF00; break; //yellow
 				}
 				w__draw_square_fill(
+					image,
 					create_posd(xo + 1, yo + 1),
 					create_posd(xo + 64 - 1, yo + 64 - 1),
 					color
@@ -175,17 +180,21 @@ int	w__render(int world_map[64])
 	t_posd	pos; // x and y start position
 	t_posd	dir; // vector -> initial direction vector
 	t_posd	plane; // vector -> the 2d raycaster version of camera plane
+	t_img	image;
 
 	double	time; //time of current frame
 	double	oldTime; //time of previous frame
 
+	image = w__create_image(w()->init, w()->width, w()->height);
 	x = 0;
 	time = 0;
 	oldTime = 0;
-	render_map();
-	render_player();
-	render_rays();
+	render_map(&image);
+	render_player(&image);
+	render_rays(&image);
 
+	mlx_put_image_to_window(w()->init, w()->window, image.img, 0, 0); // TODO
+	mlx_destroy_image(w()->init,image.img);
 
 	state()->player_move_speed = 0.16 * 5.0; //the constant value is in squares/second
 	state()->player_rot_speed = 0.16 * 3.0; //the constant value is in radians/second

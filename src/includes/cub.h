@@ -6,7 +6,7 @@
 /*   By: kmatos-s <kmatos-s@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/07/26 19:51:43 by kmatos-s          #+#    #+#             */
-/*   Updated: 2023/08/18 19:51:38 by kmatos-s         ###   ########.fr       */
+/*   Updated: 2023/09/04 21:28:29 by kmatos-s         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,13 +77,14 @@ int			w__close(void);
 
 int			w__render(int world_map[64]);
 
-void		w__draw_pixel(t_posd p, int color);
-void		w__draw_line(t_posd p1, t_posd p2, int color);
-void		w__draw_line_weight(t_posd p1, t_posd p2, int color, int weight);
-void		w__draw_square(t_posd corner1, t_posd corner4, int color);
-void		w__draw_square_fill(t_posd corner1, t_posd corner4, int color);
-void		w__draw_circle(t_posd p, int r, int color);
-void		w__draw_circle_fill(t_posd p, int r, int color);
+void		w__draw_pixel(t_img *image, t_posd p, int color);
+void		w__draw_line(t_img *image, t_posd p1, t_posd p2, int color);
+void		w__draw_line_weight(t_img *image, t_posd p1, t_posd p2, int color, int weight);
+void		w__draw_square(t_img *image, t_posd corner1, t_posd corner4, int color);
+void		w__draw_square_fill(t_img *image, t_posd corner1, t_posd corner4, int color);
+void		w__draw_circle(t_img *image, t_posd p, int r, int color);
+void		w__draw_circle_fill(t_img *image, t_posd p, int r, int color);
+t_img		w__create_image(void *mlx_ptr, int width, int height);
 t_cast_result	cast_ray(t_posd from, int angle);
 
 /******************************************************************************\
@@ -102,12 +103,14 @@ void	print_posd(t_posd p, char *name);
 \******************************************************************************/
 
 t_state *state(void);
+void	*textures(void); // TODO
 
 /******************************************************************************\
 * UTILS																		   *
 \******************************************************************************/
 
 void	print_map(int array[MAP_HEIGHT][MAP_WIDTH]);
+
 
 
 /******************************************************************************\

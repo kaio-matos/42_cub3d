@@ -1,6 +1,16 @@
 #include <cub.h>
 
-void	w__draw_pixel(t_posd p, int color)
+t_img	w__create_image(void *mlx_ptr, int width, int height)
+{
+	t_img	image;
+
+	image.img = mlx_new_image(mlx_ptr, width, height);
+	image.addr = mlx_get_data_addr(image.img, &image.bits_per_pixel, &image.line_length,
+								&image.endian);
+	return (image);
+}
+
+void	w__draw_pixel(t_img *image, t_posd p, int color)
 {
 	// move to other draw functions for better performance
 	if (p.x < 0)
@@ -11,10 +21,14 @@ void	w__draw_pixel(t_posd p, int color)
 		p.y = 0;
 	if (p.y > w()->height)
 		p.y = w()->height;
-	mlx_pixel_put(w()->init, w()->window, p.x, p.y, color);
+
+	char	*dst;
+
+	dst = image->addr + ((int)p.y * image->line_length + (int)p.x * (image->bits_per_pixel / 8));
+	*(unsigned int*)dst = color;
 }
 
-void	w__draw_line(t_posd p1, t_posd p2, int color)
+void	w__draw_line(t_img *image, t_posd p1, t_posd p2, int color)
 {
 	int		i;
 	t_posd	d;
@@ -29,14 +43,14 @@ void	w__draw_line(t_posd p1, t_posd p2, int color)
 	increment.y = d.y / steps;
 	while (i <= steps)
 	{
-		w__draw_pixel(p1, color);
+		w__draw_pixel(image, p1, color);
 		p1.x += increment.x;
 		p1.y += increment.y;
 		i++;
 	}
 }
 
-void	w__draw_line_weight(t_posd p1, t_posd p2, int color, int weight)
+void	w__draw_line_weight(t_img *image, t_posd p1, t_posd p2, int color, int weight)
 {
 	int		i;
 	t_posd	d;
@@ -57,8 +71,8 @@ void	w__draw_line_weight(t_posd p1, t_posd p2, int color, int weight)
 		current_w = 0;
 		while (current_w <= weight)
 		{
-			w__draw_pixel(create_posd(p1.x + current_w, p1.y), color); // fix
-			w__draw_pixel(create_posd(p1.x, p1.y + current_w), color);
+			w__draw_pixel(image, create_posd(p1.x + current_w, p1.y), color); // fix
+			w__draw_pixel(image, create_posd(p1.x, p1.y + current_w), color);
 			current_w++;
 		}
 		p1.x += increment.x;
@@ -67,7 +81,7 @@ void	w__draw_line_weight(t_posd p1, t_posd p2, int color, int weight)
 	}
 }
 
-void	w__draw_circle(t_posd p, int r, int color)
+void	w__draw_circle(t_img *image, t_posd p, int r, int color)
 {
 	double	i;
 	double	angle;
@@ -80,6 +94,7 @@ void	w__draw_circle(t_posd p, int r, int color)
 		current.x = r * cos(angle * PI / 180);
 		current.y = r * sin(angle * PI / 180);
 		w__draw_pixel(
+			image,
 			create_posd(p.x + current.x, p.y + current.y),
 			color
 		);
@@ -87,7 +102,7 @@ void	w__draw_circle(t_posd p, int r, int color)
 	}
 }
 
-void	w__draw_circle_fill(t_posd p, int r, int color)
+void	w__draw_circle_fill(t_img *image, t_posd p, int r, int color)
 {
 	double	i;
 	double	angle;
@@ -102,6 +117,7 @@ void	w__draw_circle_fill(t_posd p, int r, int color)
 			current.x = r * cos(angle * PI / 180);
 			current.y = r * sin(angle * PI / 180);
 			w__draw_pixel(
+				image,
 				create_posd(p.x + current.x, p.y + current.y),
 				color
 			);
@@ -111,7 +127,7 @@ void	w__draw_circle_fill(t_posd p, int r, int color)
 	}
 }
 
-void	w__draw_square(t_posd corner1, t_posd corner4, int color)
+void	w__draw_square(t_img *image, t_posd corner1, t_posd corner4, int color)
 {
 	double	dist_x;
 	double	dist_y;
@@ -123,13 +139,13 @@ void	w__draw_square(t_posd corner1, t_posd corner4, int color)
 	corner2 = create_posd(corner1.x + dist_x, corner1.y);
 	corner3 = create_posd(corner1.x, corner1.y + dist_y);
 
-	w__draw_line(corner1, corner2, color);
-	w__draw_line(corner1, corner3, color);
-	w__draw_line(corner2, corner4, color);
-	w__draw_line(corner3, corner4, color);
+	w__draw_line(image, corner1, corner2, color);
+	w__draw_line(image, corner1, corner3, color);
+	w__draw_line(image, corner2, corner4, color);
+	w__draw_line(image, corner3, corner4, color);
 }
 
-void	w__draw_square_fill(t_posd corner1, t_posd corner4, int color)
+void	w__draw_square_fill(t_img *image, t_posd corner1, t_posd corner4, int color)
 {
 	double	dist_x;
 	double	dist_y;
@@ -144,7 +160,7 @@ void	w__draw_square_fill(t_posd corner1, t_posd corner4, int color)
 		y = corner1.y;
 		while (y < dist_y + corner1.y)
 		{
-			w__draw_pixel(create_posd(x, y), color);
+			w__draw_pixel(image, create_posd(x, y), color);
 			y++;
 		}
 		x++;

@@ -55,7 +55,6 @@ static void move_player(int key)
 		state()->player_delta.x = cos(degree_to_radians(state()->player_angle));
 		state()->player_delta.y = -sin(degree_to_radians(state()->player_angle));
 	}
-	mlx_clear_window(w()->init, w()->window);
 }
 
 static int e__key_press(int key)
@@ -88,6 +87,18 @@ void	print_map(int array[MAP_HEIGHT][MAP_WIDTH])
 		printf("\n");
 		j++;
 	}
+}
+
+void	*textures(void)
+{
+	static void *img;
+	int			height;
+	int			width;
+	// TODO
+	if (!img) {
+		img = mlx_xpm_file_to_image(w()->init, "textures/wall.xpm", &width, &height);
+	}
+	return (img);
 }
 
 int All_Textures[]=               //all 32x32 textures
@@ -264,6 +275,7 @@ int	main(void)
 
 	w__init(SCREEN_WIDTH, SCREEN_HEIGHT);
 	w__open();
+	textures();
 	mlx_loop_hook(w()->init, w__render, world_map);
 	mlx_hook(w()->window, 17, WINDOW_X, w__close, NULL);
 	// key press
