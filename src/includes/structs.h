@@ -57,4 +57,25 @@ typedef struct s_cast_result {
 	float	shade;
 }	t_cast_result;
 
+/******************************************************************************\
+* PARSER																	   *
+\******************************************************************************/
+
+typedef struct s_textures {
+	char	*NO;
+	char	*SO;
+	char	*WE;
+	char	*EA;
+} t_textures;
+
+typedef struct s_colors {
+	char	*floor;
+	char	*celing;
+} t_colors;
+
+typedef struct s_parse_cub_result {
+	t_textures	textures;
+	t_colors	colors;
+}	t_parse_cub_result;
+
 #endif

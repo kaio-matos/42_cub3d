@@ -27,8 +27,13 @@ CCF_INCL_MANDATORY	= -I ./$(SRC_DIR)/includes -I $(LIBFT_DIR) -I $(MINILIBX_DIR)
 
 C_FILES_WINDOW		= $(addprefix window/,window.c w__render.c w__draw.c w__cast.c)
 C_FILES_MODEL		= $(addprefix model/,position/position.c)
+C_FILES_PARSER		= $(addprefix parser/,parser.c)
+C_FILES_STATE		= $(addprefix state/,state.c)
 
-C_FILES_MANDATORY	= main.c $(C_FILES_WINDOW) $(C_FILES_MODEL)
+C_FILES_TESTS		= $(addprefix tests/,parser/parser.spec.c)
+
+C_FILES_MODULES = $(C_FILES_WINDOW) $(C_FILES_MODEL) $(C_FILES_PARSER) $(C_FILES_STATE)
+C_FILES_MANDATORY	= main.c $(C_FILES_MODULES)
 FILES_MANDATORY		= $(C_FILES_MANDATORY)
 SRCS_MANDATORY		= $(addprefix $(SRC_DIR)/,$(FILES_MANDATORY))
 OBJS_MANDATORY		= $(addprefix $(OBJS_DIR)/,$(FILES_MANDATORY:.c=.o))
@@ -49,6 +54,11 @@ debug: $(LIBS_TO_COMPILE)
 
 rebuild: $(LIBS_TO_COMPILE)
 	@$(CC) $(CCF_STRICT) $(CCF_INCL_MANDATORY) $(SRCS_MANDATORY) $(LIBS) -o $(NAME)
+
+test: $(LIBS_TO_COMPILE)
+	@$(CC) $(CCF_DEBUG) $(CCF_INCL_MANDATORY) -I tests/ $(addprefix $(SRC_DIR)/,$(C_FILES_MODULES)) $(C_FILES_TESTS) $(LIBS) -lrt -lm -o $(NAME)_test
+	./$(NAME)_test
+	rm cub3D_test
 
 ################################################################################
 # LIBS
