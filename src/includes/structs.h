@@ -76,6 +76,7 @@ typedef struct s_colors {
 typedef struct s_parse_cub_result {
 	t_textures	textures;
 	t_colors	colors;
+	char		*map;
 }	t_parse_cub_result;
 
 #endif
